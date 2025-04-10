@@ -1,18 +1,18 @@
-const express = require("express");
-const fileUpload = require("express-fileupload");
-const router = express.Router();
+const express = require("express")
+const fileUpload = require("express-fileupload")
+const router = express.Router()
 
-const axios = require("axios");
+const axios = require("axios")
 
 // Import du models Team, Club, Event
-const Event = require("../models/Event");
-const Team = require("../models/Team");
-const Club = require("../models/Club");
+const Event = require("../models/Event")
+const Team = require("../models/Team")
+const Club = require("../models/Club")
 
 // Import du middleware isAuthenticated
-const isAuthenticated = require("../middlewares/isAuthenticated");
+const isAuthenticated = require("../middlewares/isAuthenticated")
 
-const ObjectId = require("mongodb").ObjectId;
+const ObjectId = require("mongodb").ObjectId
 
 // const cloudinary = require("cloudinary").v2;
 // const convertToBase64 = require("../utils/convertToBase64");
@@ -21,24 +21,24 @@ const ObjectId = require("mongodb").ObjectId;
 
 router.post("/club/:id/new-event", isAuthenticated, async (req, res) => {
   try {
-    const user = req.user;
-    const club = await Club.findById(req.params.id);
-    const clubTeams = await Team.find({ teamClub: club._id });
+    const user = req.user
+    const club = await Club.findById(req.params.id)
+    const clubTeams = await Team.find({ teamClub: club._id })
     // console.log(clubTeams);
 
     // Creating an array with all coaches from the club's teams
-    const clubCoachs = [];
+    const clubCoachs = []
     for (i = 0; i < clubTeams.length; i++) {
       // console.log(clubTeams[i].name);
       for (j = 0; j < clubTeams[i].coachs.length; j++) {
-        clubCoachs.push(clubTeams[i].coachs[j]);
+        clubCoachs.push(clubTeams[i].coachs[j])
         // console.log(clubTeams[i].coachs[j]);
       }
     }
     // console.log(clubCoachs);
 
-    const isAdmin = club.admins.find((admin) => admin.equals(user._id));
-    const isCoach = clubCoachs.find((coach) => coach.equals(user._id));
+    const isAdmin = club.admins.find((admin) => admin.equals(user._id))
+    const isCoach = clubCoachs.find((coach) => coach.equals(user._id))
 
     const {
       name,
@@ -57,22 +57,22 @@ router.post("/club/:id/new-event", isAuthenticated, async (req, res) => {
       summons,
       teamsSummoned,
       coachs,
-    } = req.body;
+    } = req.body
 
-    console.log(req.params.id);
+    console.log(req.params.id)
 
     if (isAdmin || isCoach) {
       // Checking if name has been passed to body
       if (!name) {
         return res.json({
           message: "Event name is required",
-        });
+        })
       }
 
       if (!start || !end) {
         return res.json({
           message: "Time slot is required",
-        });
+        })
       }
 
       const newEvent = new Event({
@@ -92,19 +92,19 @@ router.post("/club/:id/new-event", isAuthenticated, async (req, res) => {
         summons: summons,
         teamsSummoned: teamsSummoned,
         coachs: coachs,
-      });
+      })
 
-      await newEvent.save();
-      res.status(201).json(newEvent);
+      await newEvent.save()
+      res.status(201).json(newEvent)
     } else {
       return res
         .status(401)
-        .json({ message: "You need to be admin or coach to create a event." });
+        .json({ message: "You need to be admin or coach to create a event." })
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: error.message })
   }
-});
+})
 
 // // ----------- ROUTE READ ALL EVENTS ------------
 // router.get("/events-old", async (req, res) => {
@@ -181,46 +181,46 @@ router.post("/club/:id/new-event", isAuthenticated, async (req, res) => {
 // ----------- ROUTE READ ALL EVENTS ------------
 router.get("/club/:id/events", isAuthenticated, async (req, res) => {
   try {
-    const location = req.query.location || "";
-    let teams = req.query.teams || "";
+    const location = req.query.location || ""
+    let teams = req.query.teams || ""
 
-    const user = req.user;
+    const user = req.user
     // const club = await Club.findById(req.params.id)
     //   .populate("admins")
     //   .populate("members");
-    const userTeams = await Team.find({ members: user._id });
-    const clubTeams = await Team.find({ teamClub: req.params.id });
+    const userTeams = await Team.find({ members: user._id })
+    const clubTeams = await Team.find({ teamClub: req.params.id })
     // const teamsUser = clubTeams.members.find((member) =>
     //   member.equals(user._id)
     // );
 
-    // Creating an array with all teams id wherre user belongs
-    const userTeamsInClub = [];
+    // Creating an array with all teams id where user belongs
+    const userTeamsInClub = []
     for (i = 0; i < clubTeams.length; i++) {
       // console.log(clubTeams[i].name);
       for (j = 0; j < clubTeams[i].members.length; j++) {
         if (user._id === clubTeams[i].members[j]) {
-          teamsUser.push(clubTeams[i]._id);
+          teamsUser.push(clubTeams[i]._id)
         }
         // console.log(clubTeams[i].coachs[j]);
       }
     }
 
-    console.log(userTeamsInClub);
+    console.log(userTeamsInClub)
     // console.log(teams);
 
     const teamsOptions = [
       "65e27580adc0e4d290e38a85",
       "65e2642a173e12409926ccf0",
       "65e0a7034541461fdba17924",
-    ];
+    ]
     // ?teams=65e27580adc0e4d290e38a85,65e2642a173e12409926ccf0,65e0a7034541461fdba17924
 
     teams === ""
       ? (teams = [...teamsOptions])
-      : (teams = req.query.teams.split(","));
+      : (teams = req.query.teams.split(","))
 
-    console.log(teams);
+    console.log(teams)
 
     const events = await Event.find({
       location: { $regex: location, $options: "i" },
@@ -230,25 +230,25 @@ router.get("/club/:id/events", isAuthenticated, async (req, res) => {
       .in([...teams])
       .populate("teamsSummoned")
       .populate("coachs")
-      .sort({ start: "asc" });
+      .sort({ start: "asc" })
 
     const total = await Event.countDocuments({
       teamsSummoned: { $in: [...teams] },
       location: { $regex: location, $options: "i" },
       visibilityEvent: true,
-    });
+    })
 
     const response = {
       total,
       events,
-    };
+    }
 
-    res.status(200).json(response);
+    res.status(200).json(response)
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ error: true, message: "Internal Server Error" });
+    console.log(err)
+    res.status(500).json({ error: true, message: "Internal Server Error" })
   }
-});
+})
 
 // ----------- ROUTE READ EVENT BY ID ------------
 router.get("/event/:id", async (req, res) => {
@@ -260,14 +260,14 @@ router.get("/event/:id", async (req, res) => {
       .populate("isAbsent")
       .populate("isLate")
       .populate("isHurt")
-      .populate("notSummons");
+      .populate("notSummons")
 
-    const numberOfMembers = event.isPresent.length;
-    res.json({ Presences: numberOfMembers, event });
+    const numberOfMembers = event.isPresent.length
+    res.json({ Presences: numberOfMembers, event })
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: error.message })
   }
-});
+})
 
 // // ----------- ROUTE UPDATE TEAM BY ID ------------
 // router.put(
@@ -405,4 +405,4 @@ router.get("/event/:id", async (req, res) => {
 
 // ----------- SET UP ------------
 // Export du router qui contient mes routes
-module.exports = router;
+module.exports = router
