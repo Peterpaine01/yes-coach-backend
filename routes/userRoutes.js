@@ -5,6 +5,7 @@ const fileUpload = require("express-fileupload")
 // Middlewares
 const isAuthenticated = require("../middlewares/isAuthenticated")
 const validateEmail = require("../middlewares/validateEmail")
+const isAdminOrCoach = require("../middlewares/isAdminOrCoach")
 
 // Controller
 const userController = require("../controllers/userController")
@@ -30,6 +31,14 @@ router.patch(
   fileUpload(),
   isAuthenticated,
   userController.updateUser
+)
+
+// ----------- UPDATE USER CLUB OR TEAM -----------
+router.patch(
+  "/coach/update-user/:id",
+  isAuthenticated,
+  isAdminOrCoach,
+  userController.updateUserTeam
 )
 
 // ----------- DELETE USER -----------

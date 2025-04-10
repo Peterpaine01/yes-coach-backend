@@ -1,5 +1,5 @@
 // J'importe mongoose pour pouvoir faire mongoose.model
-const mongoose = require("mongoose");
+const mongoose = require("mongoose")
 
 // MODEL USER
 
@@ -19,7 +19,6 @@ const User = mongoose.model("User", {
   weight: Number,
   size: String,
   shoesSize: String,
-  role: Array,
   unavailability: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Unavailability",
@@ -31,20 +30,19 @@ const User = mongoose.model("User", {
     },
   ],
   userClubs: [
-    // {
-    //   club: {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: "Club",
-    //   },
-    //   isAdmin: Boolean,
-    //   clubRole: [
-    //     {
-    //       type: mongoose.Schema.Types.ObjectId,
-    //       ref: "Role",
-    //     },
-    //   ],
-    // },
-    { type: mongoose.Schema.Types.ObjectId, ref: "Club" },
+    {
+      club: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Club",
+      },
+      isAdmin: { type: Boolean, default: false },
+      clubRole: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Role",
+        },
+      ],
+    },
   ],
   userTeams: [
     {
@@ -52,19 +50,14 @@ const User = mongoose.model("User", {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Team",
       },
-      isCoach: [
-        {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Team",
-        },
-      ],
+      isCoach: { type: Boolean, default: false },
     },
   ],
 
   token: String,
   hash: String,
   salt: String,
-});
+})
 
 // Export du modèle
-module.exports = User;
+module.exports = User

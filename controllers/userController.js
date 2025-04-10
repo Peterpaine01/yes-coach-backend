@@ -280,6 +280,71 @@ const updateUser = async (req, res) => {
   }
 }
 
+const updateUserTeam = async (req, res) => {
+  try {
+    const id = req.params.id
+    const userToUpdate = await User.findById(id)
+
+    if (!userToUpdate) {
+      return res.status(404).json({ message: "User not found" })
+    }
+    console.log(userToUpdate)
+
+    // Body destructuring (idéalement tu pourrais l'extraire de req.body)
+    const { addTeams, removeTeams } = req.body
+
+    // --- Handle team updates ---
+    if (addTeams) {
+      // Add teams if they are not already in the user's teams array
+      console.log(userToUpdate)
+      for (const teamId of addTeams) {
+        if (
+          !userToUpdate.userTeams.some(
+            (team) => team.team.toString() === teamId
+          )
+        ) {
+          userToUpdate.userTeams.push({ team: teamId })
+
+          // Update the team members by adding this user
+          const teamToUpdate = await Team.findById(teamId)
+          if (teamToUpdate) {
+            teamToUpdate.members.push(userToUpdate._id)
+            await teamToUpdate.save()
+          }
+        }
+      }
+    }
+
+    if (removeTeams) {
+      // Remove teams from the user's teams array
+      for (const teamId of removeTeams) {
+        const index = userToUpdate.userTeams.findIndex(
+          (team) => team.team.toString() === teamId
+        )
+        if (index !== -1) {
+          userToUpdate.userTeams.splice(index, 1)
+
+          // Remove the user from the team members
+          const teamToUpdate = await Team.findById(teamId)
+          if (teamToUpdate) {
+            const memberIndex = teamToUpdate.members.indexOf(userToUpdate._id)
+            if (memberIndex !== -1) {
+              teamToUpdate.members.splice(memberIndex, 1)
+              await teamToUpdate.save()
+            }
+          }
+        }
+      }
+    }
+
+    // Save updated user
+    await userToUpdate.save()
+    res.json(userToUpdate)
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+}
+
 // ----------- DELETE USER BY ID ------------
 const deleteUser = async (req, res) => {
   try {
@@ -315,5 +380,6 @@ module.exports = {
   getUsers,
   getUserById,
   updateUser,
+  updateUserTeam,
   deleteUser,
 }
